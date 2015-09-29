@@ -21,9 +21,10 @@ stopword_set = load_stopwords_set('stopwords.txt')
 
 
 def extract_snippet(keyword):
-    r = requests.get("https://en.wikipedia.org/w/api.php?action=opensearch&search=%s&format=json" % keyword.strip())
+    r = requests.get("https://en.wikipedia.org/w/api.php?action=opensearch&search=%s&format=json" %keyword.strip())
     result = r.json()
-    if len(result[1]) > 1:
+
+    if (len(result[1]) > 1 and result[2][0].strip() != ""):
         snippet_without_schar = re.sub(r"[^\x00-\x7F]+", '', result[2][0])
         snippet_without_pronunciation = re.sub(r"(\/[\w ]+\/)", '', snippet_without_schar)
         snippet_without_punctuation = re.sub(r"[\(\)\;\.\,]+", '', snippet_without_pronunciation)
@@ -32,8 +33,10 @@ def extract_snippet(keyword):
 
 
 def remove_stopwords(snippet):
-    set_snippet, result = set(snippet.split(" ")), []
-    [result.append(x.lower()) for x in set_snippet if x.lower() not in stopword_set]
+    result = []
+    if snippet.strip() != "":
+        set_snippet = set(snippet.split(" "))
+        [result.append(x.lower()) for x in set_snippet if x.lower() not in stopword_set]
     return result
 
 
@@ -47,7 +50,7 @@ class GetRemovedStopWordSetThread(threading.Thread):
         self.result.append(remove_stopwords(extract_snippet(self.keyword)))
 
 
-def similarity_measure(keyword1, keyword2, algorithm):
+def similarity_measure(keyword1, keyword2, algorithm='jaccard'):
     result = []
     # Create new threads
     thread1, thread2 = GetRemovedStopWordSetThread(keyword1, result), GetRemovedStopWordSetThread(keyword2, result)
@@ -60,32 +63,36 @@ def similarity_measure(keyword1, keyword2, algorithm):
 
     if len(result) == 2:
         set1, set2 = [], []
-        [set1.append(wnl.lemmatize(i, j[0])) if j[0] in ['a', 'n', 'v'] else set1.append(wnl.lemmatize(i)) for i,j in pos_tag(result[0])]
-        [set2.append(wnl.lemmatize(i, j[0])) if j[0] in ['a', 'n', 'v'] else set2.append(wnl.lemmatize(i)) for i,j in pos_tag(result[1])]
-        intersec_len = len(set(set1).intersection(set(set2)))
-        set1_len, set2_len = len(set1), len(set2)
-        print("intersec set : %s" % set(set1).intersection(set(set2)))
+        if (len(result[0]) > 0 and len(result[1]) > 0):
+            [set1.append(wnl.lemmatize(i, j[0])) if j[0] in ['a', 'n', 'v'] else set1.append(wnl.lemmatize(i)) for i,j in pos_tag(result[0])]
+            [set2.append(wnl.lemmatize(i, j[0])) if j[0] in ['a', 'n', 'v'] else set2.append(wnl.lemmatize(i)) for i,j in pos_tag(result[1])]
+            intersec_len = len(set(set1).intersection(set(set2)))
+            set1_len, set2_len = len(set1), len(set2)
+            print("intersec set : %s" % set(set1).intersection(set(set2)))
+            algorithm = algorithm.lower()
 
-        algorithm = algorithm.lower()
-        if algorithm == "jaccard":
-            return intersec_len / float(set1_len + set2_len - intersec_len)
-        elif algorithm == "simple":
-            return intersec_len
-        elif algorithm == "overlap":
-            return intersec_len / float(min(set1_len, set2_len))
-        elif algorithm == "dice":
-            return intersec_len / float(set1_len + set2_len)
-        elif algorithm == "cosine":
-            return intersec_len / float((math.sqrt(set1_len) * math.sqrt(set2_len)))
+            # print "intersect_len : %s"%intersec_len
+            if algorithm == "jaccard":
+                return intersec_len / float(set1_len + set2_len - intersec_len)
+            elif algorithm == "simple":
+                return intersec_len
+            elif algorithm == "overlap":
+                return intersec_len / float(min(set1_len, set2_len))
+            elif algorithm == "dice":
+                return intersec_len / float(set1_len + set2_len)
+            elif algorithm == "cosine":
+                return intersec_len / float((math.sqrt(set1_len) * math.sqrt(set2_len)))
+            else:
+                return 0
         else:
             return 0
     else:
         return 0
 
-start = time.clock()
-print similarity_measure('tim cook', 'steve jobs', "jaccard")
+# start = time.clock()
+# print similarity_measure('javascripts', 'web-developement')
 
 # txt = "freaking math people hardest crushes"
 # print [wnl.lemmatize(i,j[0].lower()) if j[0].lower() in ['a','n','v'] else wnl.lemmatize(i) for i,j in pos_tag(word_tokenize(txt))]
-print "Spending time : %s" % (time.clock() - start)
+# print "Spending time : %s" % (time.clock() - start)
 # print pos_tag(["crawls", "hello"])

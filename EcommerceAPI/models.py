@@ -1,3 +1,6 @@
+from EcommerceAPI.constants import ORDER_STATUS_WAITING, ORDER_STATUS_CONFIRMED, ORDER_STATUS_COMPLETED, \
+    ORDER_STATUS_CANCEL
+import constants
 # This is an auto-generated Django model module.
 # You'll have to do the following manually to clean this up:
 #   * Rearrange models' order
@@ -7,11 +10,21 @@
 #
 # Also note: You'll have to insert the output of 'django-admin sqlcustom [app_label]'
 # into your database.
-from __future__ import unicode_literals
+# from __future__ import unicode_literals
 
 from django.db import models
 from django.conf import settings
 from django.utils.encoding import smart_unicode
+import os
+import sys
+
+parentdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, parentdir)
+
+env = "BookEcommerce.settings"
+
+# setup_environ(settings)
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", env)
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
@@ -36,9 +49,9 @@ class Book(models.Model):
     description = models.TextField(blank=True, null=True)
     cover_url = models.CharField(max_length=255, blank=True, null=True)
     price = models.FloatField()
-    discount = models.FloatField(blank=True, null=True)
-    stock = models.IntegerField(blank=True, null=True)
-    num_pages = models.IntegerField(blank=True, null=True)
+    discount = models.FloatField()
+    stock = models.IntegerField()
+    num_pages = models.IntegerField()
 
     class Meta:
         managed = False
@@ -110,17 +123,17 @@ class Genre(models.Model):
 
 class OrderHistory(models.Model):
     STATUS_CHOICE = (
-        (1, 'Waiting'),
-        (2, 'Confirmed And Shipping'),
-        (3, 'Completed'),
-        (4, 'Cancel')
+        (ORDER_STATUS_WAITING, 'Waiting'),
+        (ORDER_STATUS_CONFIRMED, 'Confirmed And Shipping'),
+        (ORDER_STATUS_COMPLETED, 'Completed'),
+        (ORDER_STATUS_CANCEL, 'Cancel')
     )
     customer = models.ForeignKey(Customer, editable=False)
     staff = models.ForeignKey(AUTH_USER_MODEL)
     order_date = models.DateTimeField(blank=True, null=True)
     status = models.SmallIntegerField(blank=True, null=False, choices=STATUS_CHOICE, default=1)
-    total = models.FloatField(blank=True, null=True)
-    shipping_fee = models.FloatField(blank=True, null=True)
+    total = models.FloatField(blank=True, default=0)
+    shipping_fee = models.FloatField(blank=True, default=0)
     shipping_address = models.TextField(blank=True, null=True)
     shipping_phone = models.CharField(max_length=45, blank=True, null=True)
     shipping_fullname = models.CharField(max_length=255, blank=True, null=True)
@@ -132,6 +145,12 @@ class OrderHistory(models.Model):
 
     def fullname(self):
         return self.customer.fullname
+
+    def total_include_shipping(self):
+        if self.shipping_fee is None:
+            return self.total
+        else:
+            return self.shipping_fee + self.total
 
     def __str__(self):
         return "#" + self.id + " - " + self.order_date

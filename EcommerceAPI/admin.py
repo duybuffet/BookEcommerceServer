@@ -30,7 +30,7 @@ class BookAdmin(admin.ModelAdmin):
 
 class OrderHistoryAdmin(admin.ModelAdmin):
     inlines = [OrderLineInline]
-    list_display = ('id', 'fullname', 'order_date', 'status', 'total')
+    list_display = ('id', 'fullname', 'order_date', 'status', 'total', 'shipping_fee', 'total_include_shipping')
     search_fields = ['id', 'fullname', 'order_date']
     readonly_fields = ('fullname', 'order_date', 'total')
     list_filter = ['status']

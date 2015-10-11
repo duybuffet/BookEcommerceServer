@@ -50,10 +50,10 @@ def get_new_books():
     :return: list object Book
     """
     filters = Q()
-    books = Book.objects.filter(filters).order_by('id').reverse().values('id', 'title', 'cover_url', 'discount', 'stock')[:API_LIMIT_ELEMENT_SEARCH]
+    books = Book.objects.filter(filters).order_by('id').reverse().values('id', 'title', 'cover_url', 'discount', 'stock', 'price')[:API_LIMIT_ELEMENT_SEARCH]
     list_book = []
     for book in books:
-        data = {'id': book['id'], 'title': book['title'], 'cover_url': book['cover_url'], 'discount': book['discount'], 'stock': book['stock']}
+        data = {'id': book['id'], 'title': book['title'], 'cover_url': book['cover_url'], 'discount': book['discount'], 'stock': book['stock'], 'price': book['price']}
         list_book.append(data)
     return list_book
 
@@ -82,10 +82,16 @@ def get_books_by_genre(genre_id):
     result = []
     try:
         list_book_id = BookGenre.objects.filter(genre_id = genre_id).values("book_id")
-        list_book = Book.objects.filter(pk__in = list_book_id)
+        list_id = []
+        for id in list_book_id:
+            list_id.append(id['book_id'])
+
+        list_book = Book.objects.filter(pk__in = list_id).values('id', 'title', 'cover_url', 'price', 'stock',
+                                                                 'discount')
+
         for book in list_book:
-            result.append({'id' : book.id, 'name' : book.title, 'cover_url' : convert_cover(book.cover_url),
-                           'price' : book.price, 'stock' : book.stock, 'discount' : book['discount']})
+            result.append({'id': book['id'], 'title': book['title'], 'cover_url': book['cover_url'],
+                           'price': book['price'], 'stock': book['stock'], 'discount': book['discount']})
         return result
     except Exception as inst:
         logging.error(type(inst))
@@ -99,10 +105,10 @@ def get_all_book():
     :return: list object book
     """
     filters = Q()
-    books = Book.objects.filter(filters).values('id', 'title', 'cover_url', 'discount', 'stock')
+    books = Book.objects.filter(filters).values('id', 'title', 'cover_url', 'discount', 'stock', 'price')
     list_book = []
     for book in books:
-        data = {'id': book['id'], 'title': book['title'], 'cover_url': book['cover_url'], 'discount': book['discount'], 'stock': book['stock']}
+        data = {'id': book['id'], 'title': book['title'], 'cover_url': book['cover_url'], 'discount': book['discount'], 'stock': book['stock'], 'price': book['price']}
         list_book.append(data)
     return list_book
 
@@ -177,4 +183,4 @@ def get_orders_by_customer(customer_id):
     return result
 
 
-# print get_orders_by_customer(1)
+print get_books_by_genre(2)

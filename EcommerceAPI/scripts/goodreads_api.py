@@ -10,7 +10,7 @@ url = 'http://www.goodreads.com'
 request_token_url = '%s/oauth/request_token' % url
 authorize_url = '%s/oauth/authorize' % url
 access_token_url = '%s/oauth/access_token' % url
-NONE_SEMENTIC_SHELVES = ['to-read','read','currently-reading','books-i-own','owned-books']
+NONE_SEMENTIC_SHELVES = ['to-read','read','currently-reading','books-i-own','owned-books', 'favorites', 'ya', 'favorite']
 key = '9ZzEFHzs9LwIdA3qt0fMw'
 key_secret = 'e0UPVFymvpt261pfTMFvsE7NgD1Djpqp2WGclGmAEA'
 
@@ -80,7 +80,9 @@ def get_user_books(auth_user_id):
     list_book = []
     response, content = client.request('%s/review/list.xml?v=2&id=%s&shelf=all' % (url, auth_user_id), 'GET')
     if response['status'] != '200':
-        raise Exception('Cannot fetch resource: %s' % response['status'])
+        # raise Exception('Cannot fetch resource: %s' % response['status'])
+        pass
+
 
     root = ET.fromstring(content)
     for review in root[1]:
@@ -107,7 +109,7 @@ def get_shelves_of_user(id):
     list_shelves = []
     response, content = client.request('%s/shelf/list.xml?user_id=%skey=%s' % (url, id, key), 'GET')
     if response['status'] != '200':
-        raise Exception('Cannot fetch resource: %s' % response['status'])
+        pass
 
     root = ET.fromstring(content)
     for shelf in root[1]:
@@ -137,19 +139,24 @@ def get_shelves_of_book_on_cloud(id):
     list_shelf = []
     response, content = client.request('%s/book/show/%s?format=xml&key=%s' % (url, id, key), 'GET')
     if response['status'] != '200':
-        raise Exception('Cannot fetch resource: %s' % response['status'])
+        # raise Exception('Cannot fetch resource: %s' % response['status'])
+        pass
 
-    root = ET.fromstring(content)
-    for shelf in root[1][26]:
-        name = shelf.get('name').lower()
-        if name not in NONE_SEMENTIC_SHELVES:
-            list_shelf.append(name)
+    try:
+        root = ET.fromstring(content)
+        for shelf in root[1][26]:
+            name = shelf.get('name').lower()
+            if name not in NONE_SEMENTIC_SHELVES:
+                list_shelf.append(name)
+    except:
+        pass
     return list_shelf
 
-# start = time.clock()
+start = time.clock()
+# print get_shelves_of_book_on_cloud(631932)
 # user_id = get_auth_user_id()
 # print get_user_books(user_id)
 # print(get_friends_books(get_user_friends(user_id)))
-# print get_shelves_of_book_on_cloud(50)
+# print get_shelves_of_book_on_cloud(55)
 # print get_shelves_of_user(46199325)
-# print "Spending time : %s" % (time.clock() - start)
+print "Spending time : %s" % (time.clock() - start)

@@ -66,6 +66,8 @@ def similarity_measure(keyword1, keyword2, algorithm='jaccard'):
         if (len(result[0]) > 0 and len(result[1]) > 0):
             [set1.append(wnl.lemmatize(i, j[0])) if j[0] in ['a', 'n', 'v'] else set1.append(wnl.lemmatize(i)) for i,j in pos_tag(result[0])]
             [set2.append(wnl.lemmatize(i, j[0])) if j[0] in ['a', 'n', 'v'] else set2.append(wnl.lemmatize(i)) for i,j in pos_tag(result[1])]
+            print "set1 : %s"%set1
+            print "set2 : %s"%set2
             intersec_len = len(set(set1).intersection(set(set2)))
             set1_len, set2_len = len(set1), len(set2)
             print("intersec set : %s" % set(set1).intersection(set(set2)))
@@ -90,7 +92,7 @@ def similarity_measure(keyword1, keyword2, algorithm='jaccard'):
         return 0
 
 # start = time.clock()
-# print similarity_measure('javascripts', 'web-developement')
+# print similarity_measure('fiction', 'novel')
 
 # txt = "freaking math people hardest crushes"
 # print [wnl.lemmatize(i,j[0].lower()) if j[0].lower() in ['a','n','v'] else wnl.lemmatize(i) for i,j in pos_tag(word_tokenize(txt))]
